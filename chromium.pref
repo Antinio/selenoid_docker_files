@@ -1,0 +1,7 @@
+Package: *
+Pin: release a=groovy
+Pin-Priority: 500
+
+Package: chromium*
+Pin: release o=LP-PPA-saiarcot895-chromium-beta
+Pin-Priority: 700
