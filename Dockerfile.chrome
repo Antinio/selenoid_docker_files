@@ -1,82 +1,12 @@
-FROM arm64v8/golang:1.15 as go
+FROM antinio/selenium_base:ubuntu24.04
 
-COPY devtools /devtools
+# Копирование Chrome
+COPY chrome-linux-arm64 /usr/local/chrome-linux-arm64
+RUN ln -s /usr/local/chrome-linux-arm64/chrome /usr/bin/google-chrome
 
-RUN \
-    apt-get update && \
-    apt-get install -y upx-ucl && \
-    cd /devtools && \
-    GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && \
-    upx /devtools/devtools
-
-FROM dumbdumbych/selenium_base_ru_en_gb-arm64-ubuntu20.10:0.01
-
-COPY saiarcot895-ubuntu-chromium-beta-groovy.list /etc/apt/sources.list.d/
-COPY chromium.pref /etc/apt/preferences.d/
-
-RUN \
-        mkdir /root/.gnupg && \
-        chmod og-rwx -R /root/.gnupg && \
-        gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/saiarcot895.gpg --keyserver keyserver.ubuntu.com --recv E6A17451DC058F40 && \
-        chmod 644 /etc/apt/trusted.gpg.d/saiarcot895.gpg && \
-        apt-get update && \
-        apt-cache policy chromium-browser && \
-        apt-get -y --no-install-recommends install gconf-service \
-         libasound2 \
-         libatk1.0-0 \
-         libc6 \
-         libcairo2 \
-         libcups2 \
-         libdbus-1-3 \
-         libexpat1 \
-         libfontconfig1 \
-         libfreetype6 \
-         libgcc1 \
-         libgconf-2-4 \
-         libgdk-pixbuf2.0-0 \
-         libglib2.0-0 \
-         libgtk2.0-0 \
-         libgtk-3-0 \
-         libnspr4 \
-         libnss3 \
-         libpango1.0-0 \
-         libstdc++6 \
-         libx11-6 \
-         libx11-xcb1 \
-         libxcb1 \
-         libxcomposite1 \
-         libxcursor1 \
-         libxdamage1 \
-         libxext6 \
-         libxfixes3 \
-         libxi6 \
-         libxrandr2 \
-         libxrender1 \
-         libxss1 \
-         libxtst6 \
-         libgbm1 \
-         libpipewire-0.3 \
-         ca-certificates \
-         fonts-liberation \
-         libappindicator3-1 \
-         libnss3 \
-         lsb-base \
-         xdg-utils \
-         libcurl4 \
-         iproute2 \
-         curl \
-         chromium-browser && \
-         chromium-browser --version && \
-        rm -Rf /tmp/* && rm -Rf /var/lib/apt/lists/*
-
-
-ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
-COPY --from=go /devtools/devtools /usr/bin/
-COPY chromedriver /usr/bin/
-COPY entrypoint.sh /
-
+# Копирование Chromedriver
+COPY chromedriver-linux-arm64/chromedriver /usr/bin/chromedriver
 RUN chmod +x /usr/bin/chromedriver
-USER selenium
 
-EXPOSE 4444
-ENTRYPOINT ["/entrypoint.sh"]
+# Настройка для Selenoid
+CMD ["/usr/bin/chromedriver", "--port=4444", "--whitelisted-ips="]
